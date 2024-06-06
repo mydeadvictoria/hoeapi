@@ -4,7 +4,7 @@ plugins {
 }
 
 group = "my.deadvictoria"
-version = "0.1"
+version = "0.1.2"
 
 val ktorVersion: String by project
 val jsoupVersion: String by project
