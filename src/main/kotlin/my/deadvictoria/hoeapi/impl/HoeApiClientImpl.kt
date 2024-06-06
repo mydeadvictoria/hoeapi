@@ -75,7 +75,7 @@ internal class HoeApiClientImpl(
         val html = response.bodyAsText()
         val doc = Jsoup.parse(html)
         val tableElem = doc.select("table.table-post-list.table-shutdowns").first()
-            ?: throw HoeApiException("Failed to parse table")
+            ?: return@coroutineScope emptyList()
         val rows = tableElem.select("tbody > tr")
             ?: throw HoeApiException("Failed to parse rows")
         val groupedRows = mutableListOf<Pair<Element, Element>>()
