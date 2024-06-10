@@ -25,10 +25,12 @@ sealed class HoeApiResult<T> {
      * @param T The type of the result.
      * @property error The error message.
      * @property context Additional context about the error.
+     * @property exception The underlying exception (optional).
      */
     data class Error<T>(
         val error: String,
-        val context: Map<String, Any> = emptyMap()
+        val context: Map<String, Any> = emptyMap(),
+        val exception: Exception? = null
     ) : HoeApiResult<T>() {
 
         companion object {

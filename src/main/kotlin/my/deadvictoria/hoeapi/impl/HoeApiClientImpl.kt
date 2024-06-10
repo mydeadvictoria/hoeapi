@@ -24,7 +24,7 @@ internal class HoeApiClientImpl(
         val estimatedTimeFormatter: DateTimeFormatter = DateTimeFormatter.ofPattern("dd.MM.yyyy HH:mm")
     }
 
-    override suspend fun searchSettlements(query: String): HoeApiResult<List<Settlement>> {
+    override suspend fun searchSettlements(query: String): HoeApiResult<List<Settlement>> = runCatching {
         val response: HttpResponse = client.get("https://hoe.com.ua/settlements") {
             parameter("term", query)
             parameter("_type", "query")
@@ -37,17 +37,17 @@ internal class HoeApiClientImpl(
         }
 
         if (!response.status.isSuccess()) {
-            return HoeApiResult.Error.withContext(
+            return@runCatching HoeApiResult.Error.withContext(
                 "Failed to search settlements",
                 "httpStatus" to response.status.value,
                 "query" to query
             )
         }
 
-        return HoeApiResult.Ok(response.body())
+        return@runCatching HoeApiResult.Ok(response.body())
     }
 
-    override suspend fun searchStreets(query: String, settlementId: Int): HoeApiResult<List<Street>> {
+    override suspend fun searchStreets(query: String, settlementId: Int): HoeApiResult<List<Street>> = runCatching {
         val response: HttpResponse = client.get("https://hoe.com.ua/streets/$settlementId") {
             parameter("term", query)
             parameter("_type", "query")
@@ -60,7 +60,7 @@ internal class HoeApiClientImpl(
         }
 
         if (!response.status.isSuccess()) {
-            return HoeApiResult.Error.withContext(
+            return@runCatching HoeApiResult.Error.withContext(
                 "Failed to search streets",
                 "httpStatus" to response.status.value,
                 "query" to query,
@@ -68,10 +68,10 @@ internal class HoeApiClientImpl(
             )
         }
 
-        return HoeApiResult.Ok(response.body())
+        return@runCatching HoeApiResult.Ok(response.body())
     }
 
-    override suspend fun fetchHouseNumbers(streetId: Int): HoeApiResult<List<String>> {
+    override suspend fun fetchHouseNumbers(streetId: Int): HoeApiResult<List<String>> = runCatching {
         val response: HttpResponse = client.get("https://hoe.com.ua/houses/$streetId") {
             headers {
                 append(HttpHeaders.Accept, ContentType.Application.Json)
@@ -80,21 +80,21 @@ internal class HoeApiClientImpl(
         }
 
         if (!response.status.isSuccess()) {
-            return HoeApiResult.Error.withContext(
+            return@runCatching HoeApiResult.Error.withContext(
                 "Failed to fetch house numbers",
                 "httpStatus" to response.status.value,
                 "streetId" to streetId
             )
         }
 
-        return HoeApiResult.Ok(response.body())
+        return@runCatching HoeApiResult.Ok(response.body())
     }
 
     override suspend fun fetchPowerOutage(
         settlementId: Int,
         streetId: Int,
         houseNumber: String
-    ): HoeApiResult<PowerOutageEvent> {
+    ): HoeApiResult<PowerOutageEvent> = runCatching {
         val response: HttpResponse = client.post("https://hoe.com.ua/shutdown-events") {
             setBody(FormDataContent(
                 Parameters.build {
@@ -118,17 +118,17 @@ internal class HoeApiClientImpl(
         )
 
         if (!response.status.isSuccess() || bodyText.isBlank() || isErrorInBody(bodyText)) {
-            return HoeApiResult.Error("Failed to fetch power outage event", commonContext)
+            return@runCatching HoeApiResult.Error("Failed to fetch power outage event", commonContext)
         }
 
         if (isOutageAbsent(bodyText)) {
-            return HoeApiResult.Ok(PowerOutageEvent.NoOutage(settlementId, streetId, houseNumber))
+            return@runCatching HoeApiResult.Ok(PowerOutageEvent.NoOutage(settlementId, streetId, houseNumber))
         }
 
         val tds = Jsoup.parse(bodyText).select("td")
 
         if (tds.size != 5) {
-            return HoeApiResult.Error.withContext<PowerOutageEvent>(
+            return@runCatching HoeApiResult.Error.withContext<PowerOutageEvent>(
                 "Failed to parse power outage event",
                 "tds" to tds
             ).addContext(commonContext)
@@ -140,7 +140,7 @@ internal class HoeApiClientImpl(
         val startTime = LocalDateTime.parse(tds[3].text(), estimatedTimeFormatter)
         val endTime = LocalDateTime.parse(tds[4].text(), estimatedTimeFormatter)
 
-        return HoeApiResult.Ok(
+        return@runCatching HoeApiResult.Ok(
             PowerOutageEvent.ActiveOutage(
                 settlementId = settlementId,
                 streetId = streetId,
@@ -159,4 +159,15 @@ internal class HoeApiClientImpl(
 
     private fun isErrorInBody(body: String): Boolean =
         body.contains("Помилка")
+
+    private suspend fun <T> runCatching(block: suspend () -> HoeApiResult<T>): HoeApiResult<T> {
+        return try {
+            block()
+        } catch (ex: Exception) {
+            HoeApiResult.Error(
+                error = "Exception has been thrown",
+                exception = ex
+            )
+        }
+    }
 }
