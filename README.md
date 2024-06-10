@@ -20,7 +20,8 @@ dependencies {
 The library avoids throwing exceptions and instead returns a custom result type called `HoeApiResult`.
 This sealed class represents a fallible operation and has two variants: `Ok` and `Error`.
 The `Ok` variant indicates a successful operation, while the `Error` variant signifies
-a failure and includes optional additional context to help diagnose the issue.
+a failure and includes optional additional context to help diagnose the issue. Also,
+an optional underlying exception is included.
 
 To create a `HoeApiClient`, you must use the `HoeApiClientFactory` which creates
 and preconfigures the client for you.
