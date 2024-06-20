@@ -1,4 +1,5 @@
 plugins {
+    id("java-library")
     kotlin("jvm") version "2.0.0"
     kotlin("plugin.serialization") version "2.0.0"
     id("org.jetbrains.kotlinx.benchmark") version "0.4.11"
@@ -28,9 +29,9 @@ configurations {
 dependencies {
     implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:$serializationVersion")
 
-    implementation("io.ktor:ktor-client-core:$ktorVersion")
-    implementation("io.ktor:ktor-client-cio:$ktorVersion")
-    implementation("io.ktor:ktor-client-content-negotiation:$ktorVersion")
+    api("io.ktor:ktor-client-core:$ktorVersion")
+    api("io.ktor:ktor-client-cio:$ktorVersion")
+    api("io.ktor:ktor-client-content-negotiation:$ktorVersion")
     implementation("io.ktor:ktor-serialization-kotlinx-json:$ktorVersion")
 
     implementation("org.jsoup:jsoup:$jsoupVersion")
@@ -76,29 +77,6 @@ publishing {
             version = project.version.toString()
 
             from(components["java"])
-
-            pom {
-                withXml {
-                    asNode().appendNode("dependencies").apply {
-                        configurations.compileClasspath.get().allDependencies.forEach {
-                            appendNode("dependency").apply {
-                                appendNode("groupId", it.group)
-                                appendNode("artifactId", it.name)
-                                appendNode("version", it.version)
-                                appendNode("scope", "compile")
-                            }
-                        }
-                        configurations.runtimeClasspath.get().allDependencies.forEach {
-                            appendNode("dependency").apply {
-                                appendNode("groupId", it.group)
-                                appendNode("artifactId", it.name)
-                                appendNode("version", it.version)
-                                appendNode("scope", "runtime")
-                            }
-                        }
-                    }
-                }
-            }
         }
     }
 }
