@@ -45,4 +45,17 @@ interface HoeApiClient {
      * @return A [HoeApiResult] containing the [PowerOutageEvent] details.
      */
     suspend fun fetchPowerOutage(settlementId: Int, streetId: Int, houseNumber: String): HoeApiResult<PowerOutageEvent>
+
+    /**
+     * Fetches the queue numbers associated with a specific street ID and house number.
+     *
+     * The result is a list of integers representing the queue numbers.
+     *
+     * @param streetId The unique identifier of the street. This is used to specify the street
+     * for which the queue information is being fetched.
+     * @param houseNumber The house number within the specified street. This helps to pinpoint
+     * the exact location for which the queue information is required.
+     * @return A [HoeApiResult] containing a [List] of [Int] representing the queue numbers.
+     */
+    suspend fun fetchQueues(streetId: Int, houseNumber: String): HoeApiResult<List<Int>>
 }

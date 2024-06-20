@@ -154,6 +154,38 @@ internal class HoeApiClientImpl(
         )
     }
 
+    override suspend fun fetchQueues(streetId: Int, houseNumber: String): HoeApiResult<List<Int>> = runCatching {
+        val response: HttpResponse = client.post("https://hoe.com.ua/shutdown-queues") {
+            setBody(FormDataContent(
+                Parameters.build {
+                    append("streetId", streetId.toString())
+                    append("house", houseNumber)
+                }
+            ))
+
+            headers {
+                append("X-Requested-With", "XMLHttpRequest")
+            }
+        }
+
+        val bodyText = response.bodyAsText()
+        val commonContext = mapOf(
+            "httpStatus" to response.status.value,
+            "streetId" to streetId,
+            "houseNumber" to houseNumber,
+            "bodyBlank" to bodyText.isBlank()
+        )
+
+        if (!response.status.isSuccess() || bodyText.isBlank()) {
+            return@runCatching HoeApiResult.Error("Failed to fetch queues", commonContext)
+        }
+
+        val queuesString = Jsoup.parse(bodyText).select("strong").text().trim()
+        val queues = queuesString.split(",").map(String::trim).map { it.toInt() }
+
+        return@runCatching HoeApiResult.Ok(queues)
+    }
+
     private fun isOutageAbsent(body: String): Boolean =
         body.contains("За вказаною адресою відсутнє зареєстроване відключення")
 
