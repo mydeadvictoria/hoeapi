@@ -76,6 +76,29 @@ publishing {
             version = project.version.toString()
 
             from(components["java"])
+
+            pom {
+                withXml {
+                    asNode().appendNode("dependencies").apply {
+                        configurations.compileClasspath.get().allDependencies.forEach {
+                            appendNode("dependency").apply {
+                                appendNode("groupId", it.group)
+                                appendNode("artifactId", it.name)
+                                appendNode("version", it.version)
+                                appendNode("scope", "compile")
+                            }
+                        }
+                        configurations.runtimeClasspath.get().allDependencies.forEach {
+                            appendNode("dependency").apply {
+                                appendNode("groupId", it.group)
+                                appendNode("artifactId", it.name)
+                                appendNode("version", it.version)
+                                appendNode("scope", "runtime")
+                            }
+                        }
+                    }
+                }
+            }
         }
     }
 }
