@@ -9,6 +9,7 @@ import io.ktor.http.*
 import my.deadvictoria.hoeapi.models.HoeApiResult
 import my.deadvictoria.hoeapi.models.PowerOutageEvent
 import my.deadvictoria.hoeapi.models.PowerOutageType
+import my.deadvictoria.hoeapi.models.ScheduleImage
 import my.deadvictoria.hoeapi.models.Settlement
 import my.deadvictoria.hoeapi.models.Street
 import my.deadvictoria.hoeapi.spi.HoeApiClient
@@ -21,6 +22,8 @@ internal class HoeApiClientImpl(
 ) : HoeApiClient {
 
     private companion object {
+        private val HOE_HOST: String = "https://hoe.com.ua"
+        private val SCHEDULE_URL: String = "https://hoe.com.ua/page/pogodinni-vidkljuchennja"
         val estimatedTimeFormatter: DateTimeFormatter = DateTimeFormatter.ofPattern("dd.MM.yyyy HH:mm")
     }
 
@@ -184,6 +187,25 @@ internal class HoeApiClientImpl(
         val queues = queuesString.split(",").map(String::trim).map { it.toInt() }
 
         return@runCatching HoeApiResult.Ok(queues)
+    }
+
+    override suspend fun fetchCurrentScheduleImage(): HoeApiResult<ScheduleImage> = runCatching {
+        val body = client.get(SCHEDULE_URL).bodyAsText()
+        val imgElem = Jsoup.parse(body).selectFirst("div.post > p > img") ?:
+            return@runCatching HoeApiResult.Ok(ScheduleImage.NoImage)
+
+        if (!imgElem.hasAttr("src")) {
+            return@runCatching HoeApiResult.Error(
+                error = "Unable to find current schedule image: no src attr"
+            )
+        }
+
+        val src = imgElem.attribute("src").value
+        val alt = imgElem.attribute("alt")?.value
+        return@runCatching HoeApiResult.Ok(ScheduleImage.Image(
+            url = HOE_HOST + src,
+            alt = alt
+        ))
     }
 
     private fun isOutageAbsent(body: String): Boolean =

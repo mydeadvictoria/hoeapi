@@ -2,6 +2,7 @@ package my.deadvictoria.hoeapi.spi
 
 import my.deadvictoria.hoeapi.models.HoeApiResult
 import my.deadvictoria.hoeapi.models.PowerOutageEvent
+import my.deadvictoria.hoeapi.models.ScheduleImage
 import my.deadvictoria.hoeapi.models.Settlement
 import my.deadvictoria.hoeapi.models.Street
 
@@ -58,4 +59,11 @@ interface HoeApiClient {
      * @return A [HoeApiResult] containing a [List] of [Int] representing the queue numbers.
      */
     suspend fun fetchQueues(streetId: Int, houseNumber: String): HoeApiResult<List<Int>>
+
+    /**
+     * Fetches the schedule image for current day
+     *
+     * @return A [HoeApiResult] containing a [ScheduleImage].
+     */
+    suspend fun fetchCurrentScheduleImage(): HoeApiResult<ScheduleImage>
 }

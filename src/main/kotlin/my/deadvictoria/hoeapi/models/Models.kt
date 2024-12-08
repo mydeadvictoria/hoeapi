@@ -180,3 +180,29 @@ data class Street(
     @SerialName("text")
     val name: String
 )
+
+/**
+ * Class representing a possible schedule image,
+ * which might be absent.
+ */
+sealed class ScheduleImage {
+
+    /**
+     * Represents a found schedule image.
+     *
+     * @param url Direct image URL (usually PNG).
+     * @param alt Optional. Alt text for the image.
+     */
+    data class Image(
+        val url: String,
+        val alt: String? = null
+    ) : ScheduleImage()
+
+    /**
+     * Represents an absent schedule image.
+     *
+     * This object is returned in case the image could not be found.
+     */
+    data object NoImage : ScheduleImage()
+}
+
