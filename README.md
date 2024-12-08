@@ -12,7 +12,7 @@ repositories {
 }
 
 dependencies {
-    implementation("com.github.mydeadvictoria:hoeapi:0.2.4")
+    implementation("com.github.mydeadvictoria:hoeapi:0.3.0")
 }
 ```
 
